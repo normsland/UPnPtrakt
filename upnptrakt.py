@@ -2,37 +2,34 @@
 import argparse
 import os
 import json
-# import urllib
-import requests
-from hashlib import sha1
+import urllib2
+from urllib2 import Request, urlopen
 import sqlite3 as sql
 import datetime
 import djmountHandler
 import episodeMatcher
-import trakt.tv
+import trakt
+from trakt.tv import TVShow, TVEpisode
 
-_TRAKTAPIKEY = "09d55b38efb03d4ee5665aa1fb417f260a76d75a"
+CLIENT_ID = '579e14acbabe1637df5f9537de20a582cff25ca885964083b0d1fd54a49defc1'
 
-def postNewEpisodesToTrakt(newEpisodes, traktCredentials):
-	apiMethod = "%s/%s/" % ("show", "scrobble")
-	apiCall = apiMethod + _TRAKTAPIKEY
-	data = {'username': traktCredentials['username'], 'password': traktCredentials['password']}
+def postNewEpisodesToTrakt(newEpisodes):
+	HEADERS = {'Content-Type': 'application/json','trakt-api-version': '2','trakt-api-key': CLIENT_ID}
+	HEADERS['Authorization'] = 'Bearer {}'.format(trakt.api_key)
 	for episode in newEpisodes:
-		data['title'] = episode[0]
-		data['tvdb_id'] = episode[1]
-		data['season'] = episode[2]
-		data['episode'] = episode[3]
-		data['title'] = episode[4]
-		data['episode_tvdb_id'] = episode[5]
-		# data['year'] = 2014
-		# encodedData = json.dumps(data)
-		resp = requests.post("http://api.trakt.tv/" + apiCall, data)
-		parsedResp = resp.json()
-		# print parsedResp
-		if not (parsedResp['status'] == 'success'):
-			print "Error:", parsedResp['error']
-		if (parsedResp['status'] == 'success'):
-			print parsedResp['message']
+		title = episode[0]
+		season = episode[2]
+		episode_num = episode[3]
+		to_post = TVEpisode(title,season,episode_num)
+		trakt_id = to_post.to_json()
+		trakt_id.update(progress=100, app_version="1.0",date="2015-03-07")
+		encodedData = json.dumps(trakt_id)
+		request = Request('https://api-v2launch.trakt.tv/scrobble/stop', data=encodedData, headers=HEADERS)
+		resp = urlopen(request).getcode()
+		if (resp == 201):
+			print str(title)+ " " + str(season) +" "+ str(episode_num) + " Successfully scrobbled"
+		else:
+			print 'Error: '+ str(resp)
 
 def updateDatabase(episodes, args):
 	dbConnection = sql.connect(args.database_file)
@@ -52,22 +49,29 @@ def updateDatabase(episodes, args):
 		dbConnection.commit()
 	return newEpisodes
 
-def initializeTraktConnection(config):
-	config['password'] = sha1(config['password']).hexdigest()
-	trakt.tv.setup(apikey=_TRAKTAPIKEY, username=config['username'], password=config['password'])
-
 def getTraktEpisodeInfo(showName, seasonNumber, episodeNumber, seriesWhitelist, seriesMismatched):
-	print showName, seasonNumber, episodeNumber
-	if (showName in seriesMismatched):
-		showName = seriesMismatched[showName]
-	if (showName in seriesWhitelist):
-		showTvDbId = seriesWhitelist[showName]
-	else: 
-		showName = showName.replace("(", "").replace(")", "").replace(":", "")
-		showTvDbId = trakt.tv.search.shows(showName)[0]['tvdb_id']
-	print showName, showTvDbId, seasonNumber, episodeNumber
-	episode = trakt.tv.show.episode(showTvDbId, seasonNumber, episodeNumber)
-	return (episode['show']['title'], showTvDbId, seasonNumber, episodeNumber, episode['episode']['title'], episode['episode']['tvdb_id'])
+    print showName, seasonNumber, episodeNumber
+    if (showName in seriesMismatched):
+        showName = seriesMismatched[showName]
+        showTvDbId = TVShow('"'+ showName +'"').tvdb
+    elif (showName in seriesWhitelist):
+        showTvDbId = seriesWhitelist[showName]
+    else:
+        showName = showName.replace("(", "").replace(")", "").replace(":", "")
+        showRes = TVShow.search('"'+ showName +'"')
+        for showFound in showRes:
+            if showName.lower() == showFound.title.lower():
+                showName = showFound.title
+                showTvDbId = showFound.tvdb
+                break
+        else:
+  		    # Cannot find exact show name in trakt.tv search results so use 1st entry
+            showName = showRes[0].title
+            showTvDbId = showRes[0].tvdb
+    print showName, showTvDbId, seasonNumber, episodeNumber
+    episode = TVEpisode(showName, seasonNumber, episodeNumber)
+    # print episode.show, showTvDbId, seasonNumber, episodeNumber, episode.title, episode.tvdb
+    return (showName, showTvDbId, seasonNumber, episodeNumber, episode.title, episode.tvdb)
 
 def jsonParser(file):
 	data_file = open(file)
@@ -92,12 +96,12 @@ def main(args):
 	if (args.restart_djmount):
 		djmountHandler.cleanUp(args.mount_path)
 	path = djmountHandler.mountFolder(args.mount_path)
-	path = os.path.join(path, r"Serviio (Andisk2)/Video/Last Viewed")
+	path = os.path.join(path, r''+args.path_to_last_viewed+'')
 
 	files = getLastViewedContent(path)
 	rawEpisodes = getEpisodesFromFiles(files)
 	traktCredentials = jsonParser(args.trakt_config_json)
-	initializeTraktConnection(traktCredentials)
+	trakt.api_key = traktCredentials['api_key']
 	seriesWhitelist = jsonParser(args.series_whitelist_json)
 	seriesMismatched = jsonParser(args.series_mismatched_json)
 	episodes = [getTraktEpisodeInfo(episode[0], episode[1], episode[2], seriesWhitelist=seriesWhitelist, seriesMismatched=seriesMismatched) for episode in rawEpisodes]
@@ -110,7 +114,7 @@ def main(args):
 			for episode in newEpisodes:
 				print episode
 	else: # not (args.dont_post)
-		postNewEpisodesToTrakt(newEpisodes, traktCredentials)
+		postNewEpisodesToTrakt(newEpisodes)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Monitors a UPnP Last Viewed folder for changes, writes into a database and posts to trakt.tv.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -118,7 +122,7 @@ if __name__ == '__main__':
 	parser.add_argument('--dont-post', action='store_true', help="Don't post to trakt.tv but print out possible database changes instead.")
 	parser.add_argument('--restart-djmount', action='store_true', help="Unmount and delete the UPnP FUSE folder and kill all djmount processes before reinitialize them again.")
 	parser.add_argument('--mount-path', type=str, default=".upnpDevices", help="Folder where the UPnP FUSE content will be mounted in via djmount.")
-	parser.add_argument('--path-to-last-viewed', type=str, default=r"Serviio (Andisk2)/Video/Last Viewed", help="Path to monitored Last Viewed folder, beginning from djmount's mount point.")
+	parser.add_argument('--path-to-last-viewed', type=str, default=r"Serviio (SERVERNAME)/Video/Last Viewed", help="Path to monitored Last Viewed folder, beginning from djmount's mount point.")
 	parser.add_argument('--database-file', type=str, default="episodes.db", help="Database file name.")
 	parser.add_argument('--trakt-config-json', type=str, default="trakt-config.json", help="Trakt.tv login and API credentials JSON file.")
 	parser.add_argument('--series-whitelist-json', type=str, default="seriesWhitelist.json", help="File with list of TVDB IDs of shows which just won't parse properly through trakt.tv's search.")
