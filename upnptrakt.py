@@ -65,7 +65,7 @@ def getTraktEpisodeInfo(showName, seasonNumber, episodeNumber, seriesWhitelist, 
                 showTvDbId = showFound.tvdb
                 break
         else:
-  		    # Cannot find exact show name in trakt.tv search results so use 1st entry
+            # Cannot find exact show name in trakt.tv search results so use 1st entry
             showName = showRes[0].title
             showTvDbId = showRes[0].tvdb
     print showName, showTvDbId, seasonNumber, episodeNumber
