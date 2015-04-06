@@ -49,6 +49,7 @@ def updateDatabase(episodes, args):
 		dbConnection.commit()
 	return newEpisodes
 
+<<<<<<< HEAD
 def updateCache(data,showName,showTitle,showTVDBId):
 	data.update({showName.lower(): {'title' : showTitle, 'tvdb':showTVDBId}})
 	return data
@@ -63,6 +64,13 @@ def getTraktEpisodeInfo(showName, seasonNumber, episodeNumber, cache, seriesWhit
         showName = seriesMismatched[showName]
         showTvDbId = TVShow('"'+ showName +'"').tvdb
         cache = updateCache(cache,showRes,showName,showTvDbId) 
+=======
+def getTraktEpisodeInfo(showName, seasonNumber, episodeNumber, seriesWhitelist, seriesMismatched):
+    print showName, seasonNumber, episodeNumber
+    if (showName in seriesMismatched):
+        showName = seriesMismatched[showName]
+        showTvDbId = TVShow('"'+ showName +'"').tvdb
+>>>>>>> a27d471015deb86c5c7f7b8495c6103f4bdf9e85
     elif (showName in seriesWhitelist):
         showTvDbId = seriesWhitelist[showName]
     else:
@@ -70,12 +78,16 @@ def getTraktEpisodeInfo(showName, seasonNumber, episodeNumber, cache, seriesWhit
         showRes = TVShow.search('"'+ showName +'"')
         for showFound in showRes:
             if showName.lower() == showFound.title.lower():
+<<<<<<< HEAD
                 cache = updateCache(cache,showName,showFound.title,showFound.tvdb)
+=======
+>>>>>>> a27d471015deb86c5c7f7b8495c6103f4bdf9e85
                 showName = showFound.title
                 showTvDbId = showFound.tvdb
                 break
         else:
             # Cannot find exact show name in trakt.tv search results so use 1st entry
+<<<<<<< HEAD
             cache = updateCache(cache,showName,showRes[0].title,showRes[0].tvdb)
             showName = showRes[0].title
             showTvDbId = showRes[0].tvdb
@@ -83,6 +95,13 @@ def getTraktEpisodeInfo(showName, seasonNumber, episodeNumber, cache, seriesWhit
     print showName, showTvDbId, seasonNumber, episodeNumber
     episode = TVEpisode(showName, seasonNumber, episodeNumber)
     #print episode.show, showTvDbId, seasonNumber, episodeNumber, episode.title, episode.tvdb
+=======
+            showName = showRes[0].title
+            showTvDbId = showRes[0].tvdb
+    print showName, showTvDbId, seasonNumber, episodeNumber
+    episode = TVEpisode(showName, seasonNumber, episodeNumber)
+    # print episode.show, showTvDbId, seasonNumber, episodeNumber, episode.title, episode.tvdb
+>>>>>>> a27d471015deb86c5c7f7b8495c6103f4bdf9e85
     return (showName, showTvDbId, seasonNumber, episodeNumber, episode.title, episode.tvdb)
 
 def jsonParser(file):
@@ -128,7 +147,10 @@ def main(args):
 				print episode
 	else: # not (args.dont_post)
 		postNewEpisodesToTrakt(newEpisodes)
+<<<<<<< HEAD
 	print (cache)
+=======
+>>>>>>> a27d471015deb86c5c7f7b8495c6103f4bdf9e85
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Monitors a UPnP Last Viewed folder for changes, writes into a database and posts to trakt.tv.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
