@@ -318,22 +318,6 @@ class TVShow(object):
     def remove_from_watchlist(self):
         remove_from_watchlist(self)
 
-    def scrobble(self, progress, app_version, app_date):
-        """Notify trakt that the current user has finished watching a movie.
-        This commits this :class:`Movie` to the current users profile. You
-        should use movie/watching prior to calling this method.
-
-        :param progress: % progress, integer 0-100. It is recommended to call
-            the watching API every 15 minutes, then call the scrobble API near
-            the end of the movie to lock it in.
-        :param app_version: Version number of the media center, be as specific
-            as you can including nightly build number, etc. Used to help debug
-            your plugin.
-        :param app_date: Build date of the media center. Used to help debug
-            your plugin.
-        """
-        return Scrobbler(self.to_json(), progress, app_version, app_date)
-
     def to_json(self):
         return {'show': {
             'title': self.title, 'year': self.year, 'ids': self.ids
@@ -619,7 +603,6 @@ class TVEpisode(object):
 		:param app_date: Build date of the media center. Used to help debug
 		your plugin.
 		"""
-		#temp = self.to_json()
 		return Scrobbler(self.to_json(), progress, app_version, app_date)
 
     def to_json(self):
