@@ -78,7 +78,7 @@ Flags provided (all off by default):
 After setting up all needed tools, creating and the initial populating of your database, you probably want to create a cronjob calling `upnptrakt.py` every so often.
 
 ## Limits & Todos
-* At the moment the load to trakt.tv is quite high, as every episode's proper data is retrieved from there. Resulting in a slow script. This is going to be changed soon. Hopefully.
+* ~~At the moment the load to trakt.tv is quite high, as every episode's proper data is retrieved from there. Resulting in a slow script. This is going to be changed soon. Hopefully.~~ Added session caching to reduce load on trakt.tv and fix #1
 * No error handling whatsoever is included. No logging either.
 * No documentation in the files.
 * If you use Serviio and like this script please add a comment/vote +1 on the [Serviio issue - trakt.tv support] (https://bitbucket.org/xnejp03/serviio/issue/594/trakttv-support) and [Serviio forums - trakt.tv] (http://forum.serviio.org/viewtopic.php?f=3&t=7996) to get trakt.tv functionality included in Serviio. I don't really think I will be improving on this beyond getting it all to work with trakt API 2.0. 

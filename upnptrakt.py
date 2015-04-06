@@ -128,7 +128,6 @@ def main(args):
 				print episode
 	else: # not (args.dont_post)
 		postNewEpisodesToTrakt(newEpisodes)
-	print (cache)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Monitors a UPnP Last Viewed folder for changes, writes into a database and posts to trakt.tv.', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
