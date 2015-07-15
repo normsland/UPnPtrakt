@@ -31,9 +31,9 @@ def init(username):
     :param username: Your trakt.tv username
     :return: Your OAuth access token
     """
-    authorization_base_url = 'https://api.trakt.tv/oauth/authorize'
-    token_url = 'https://api.trakt.tv/oauth/token'
-
+    authorization_base_url = 'https://api-v2launch.trakt.tv/oauth/authorize'
+    token_url = 'https://api-v2launch.trakt.tv/oauth/token'
+	
     # OAuth endpoints given in the API documentation
     oauth = OAuth2Session(CLIENT_ID, redirect_uri=REDIRECT_URI, state=None)
 
