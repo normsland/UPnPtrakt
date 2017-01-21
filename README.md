@@ -37,7 +37,7 @@ If your Linux flavor is not Ubuntu or Debian, there's probably a package for djm
 This Python program uses quite a few packages including moogar0880's great [PyTrakt] (https://github.com/moogar0880/PyTrakt/) which is included in this repo. All of them can be installed via [pip](http://www.pip-installer.org/):
 
 ```shell
-pip install guessit==1.0.2 psutil simplejson requests requests-oauthlib
+pip install guessit==1.0.2 stevedore==0.14 psutil simplejson requests requests-oauthlib
 ```
 
 ## Setup
